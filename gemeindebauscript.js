@@ -7,6 +7,7 @@
 */
 
 let map, pano, markers = [];
+let initialRandomShown = false;
 
 /* -------------------- Map bootstrap -------------------- */
 
@@ -34,6 +35,10 @@ window.initMap = function () {
     loadMarkers()
         .then((rows) => {
             if (status) status.textContent = rows && rows.length ? "Fertig" : "0 Treffer";
+            if (!initialRandomShown && rows && rows.length) {
+                showRandomMarker();
+                initialRandomShown = true;
+            }
         })
         .catch(() => status && (status.textContent = "Fehler beim Laden der Daten."));
 };
@@ -287,6 +292,17 @@ function setRecordTitle(id, recordId, title) {
         titleEl.textContent = title;
         container.append(titleEl);
     }
+}
+
+function showRandomMarker() {
+    if (!markers.length) return;
+    const idx = Math.floor(Math.random() * markers.length);
+    const marker = markers[idx];
+    if (!marker) return;
+
+    // Center map on the selected marker and reuse the existing click handler to populate details.
+    map.panTo(marker.getPosition());
+    google.maps.event.trigger(marker, "click");
 }
 
 /* -------------------- Markers & interactions -------------------- */
