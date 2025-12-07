@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
           local_folder: "./"
-          remote_folder: "/kunden/homepages/19/d512186843/htdocs/arthurssite/newfromGit"
+          remote_folder: "/kunden/homepages/19/d512186843/htdocs/arthurssite/fromGit"
           include: '["**/*"]'
           exclude: '[".git/**"]'
           cleanup: false
