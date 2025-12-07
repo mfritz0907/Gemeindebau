@@ -15,9 +15,9 @@ jobs:
       - name: Deploy via SFTP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASSWORD }}
           port: 22
           source: "./"
           target: "/arthurssite/newfromGit"
