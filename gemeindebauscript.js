@@ -8,6 +8,8 @@
 
 let map, pano, markers = [];
 let initialRandomShown = false;
+let hasActiveSelection = false;
+let panoExpanded = false;
 
 /* -------------------- Map bootstrap -------------------- */
 
@@ -26,6 +28,8 @@ window.initMap = function () {
         visible: false,
     });
     map.setStreetView(pano);
+
+    setupPanoExpansion();
 
     wireForm();
 
@@ -265,6 +269,30 @@ function zoomForFullWindow(desiredZoomLevel) {
     return clamp(adjusted, 0, 5);
 }
 
+function setupPanoExpansion() {
+    const panoEl = document.getElementById("pano");
+    if (!panoEl) return;
+
+    panoEl.addEventListener("click", () => {
+        if (!hasActiveSelection) return;
+
+        panoExpanded = !panoExpanded;
+        panoEl.classList.toggle("expanded", panoExpanded);
+        panoEl.classList.toggle("expandable", hasActiveSelection);
+        google.maps.event.trigger(pano, "resize");
+    });
+}
+
+function enablePanoExpansionCue() {
+    const panoEl = document.getElementById("pano");
+    if (!panoEl) return;
+
+    hasActiveSelection = true;
+    panoExpanded = false;
+    panoEl.classList.add("expandable");
+    panoEl.classList.remove("expanded");
+}
+
 function setText(id, v) {
     const el = document.getElementById(id);
     if (el) el.textContent = v;
@@ -330,6 +358,8 @@ window.placeMarkers = function (rows) {
         m.addListener("click", () => {
             const heading = Number(row.heading) || 0;
             const pitch = Number(row.pitch) || 0;
+
+            enablePanoExpansionCue();
 
             // Your DB 'zoom' column is FOV degrees (10..100) saved by update_view.php.
             // Convert FOV → SV zoom level, then adjust for pane size to match full-window perception.
