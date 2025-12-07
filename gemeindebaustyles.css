@@ -85,15 +85,15 @@ html, body {
 
 .search-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
     align-items: end;
 }
 
 .search-form input[type="text"] {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fff;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -106,9 +106,9 @@ html, body {
 }
 
 .search-form button {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     background: #fff;
     cursor: pointer;
     font-weight: 600;
@@ -152,10 +152,10 @@ html, body {
 
 .container {
     display: grid;
-    grid-template-columns: 1.1fr 1fr;
+    grid-template-columns: 1.25fr 1fr;
     gap: 16px;
     padding: 16px;
-    height: calc(100vh - 180px);
+    height: calc(100vh - 150px);
     box-sizing: border-box;
 }
 
@@ -175,6 +175,12 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.left .panel,
+.right .panel:first-of-type {
+    flex: 1;
+    min-height: 420px;
 }
 
 .panel-heading {
@@ -200,7 +206,7 @@ html, body {
 .map, .pano {
     width: 100%;
     height: 100%;
-    min-height: 300px;
+    min-height: 400px;
     border-radius: 14px;
     border: 1px solid #d9e2ec;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 10px 24px rgba(0,0,0,0.06);
