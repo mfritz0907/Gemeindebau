@@ -22,5 +22,6 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           local_folder: "./"
           remote_folder: "/arthurssite/newfromGit"
+          include: "**/*"
+          exclude: ".git/**"
           cleanup: false
-
