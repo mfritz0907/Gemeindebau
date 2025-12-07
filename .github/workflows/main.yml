@@ -31,7 +31,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           server: ${{ secrets.HOST }}
           port: 22
-          local_path: '.'   # change this if needed!
+          local_path: './*'   # change this if needed!
           remote_path: ${{ secrets.Pfad }}
           sftp_only: true
           delete_remote_files: true   # optional: cleans remote before upload
