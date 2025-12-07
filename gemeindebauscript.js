@@ -269,6 +269,31 @@ function zoomForFullWindow(desiredZoomLevel) {
     return clamp(adjusted, 0, 5);
 }
 
+function capturePanoView() {
+    if (!pano) return null;
+
+    const position = pano.getPosition();
+    const pov = pano.getPov();
+    const zoom = pano.getZoom();
+
+    return {
+        position: position ? { lat: position.lat(), lng: position.lng() } : null,
+        heading: pov?.heading,
+        pitch: pov?.pitch,
+        zoom: Number.isFinite(zoom) ? zoom : null,
+    };
+}
+
+function restorePanoView(state) {
+    if (!state || !pano) return;
+
+    if (state.position) pano.setPosition(state.position);
+    if (state.heading !== undefined && state.pitch !== undefined) {
+        pano.setPov({ heading: state.heading, pitch: state.pitch });
+    }
+    if (Number.isFinite(state.zoom)) pano.setZoom(state.zoom);
+}
+
 function parseStreetViewLink(link) {
     if (!link || typeof link !== "string") return null;
 
@@ -376,10 +401,14 @@ function setupPanoExpansion() {
     panoEl.addEventListener("click", () => {
         if (!hasActiveSelection) return;
 
+        const preservedView = capturePanoView();
         panoExpanded = !panoExpanded;
         panoEl.classList.toggle("expanded", panoExpanded);
         panoEl.classList.toggle("expandable", hasActiveSelection);
         google.maps.event.trigger(pano, "resize");
+
+        restorePanoView(preservedView);
+        google.maps.event.addListenerOnce(pano, "pano_changed", () => restorePanoView(preservedView));
     });
 }
 

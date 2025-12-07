@@ -152,7 +152,7 @@ html, body {
 
 .container {
     display: grid;
-    grid-template-columns: 1.25fr 1fr;
+    grid-template-columns: 1fr 2fr;
     gap: 16px;
     padding: 16px;
     height: calc(100vh - 150px);
