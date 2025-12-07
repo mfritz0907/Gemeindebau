@@ -1,56 +1,38 @@
-name: SFTP Deploy
+name: Deploy to IONOS SFTP
 
 on:
   push:
     branches:
-      - main
+      - main   # or master — adjust if necessary
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug repository contents before deploy
-        run: |
-          echo "Listing repository contents before deployment:"
-          find . -maxdepth 3 -type f -print
-
-      - name: Inventory files to deploy
-        id: inventory
-        run: |
-          FILE_COUNT=$(find . -path './.git' -prune -o -type f -print | wc -l)
-          echo "Found ${FILE_COUNT} files (excluding .git) available for upload."
-          echo "count=${FILE_COUNT}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload via SFTP
-        id: sftp_deploy
-        uses: sand4rt/ftp-deployer@v1.5
+      # Optional: If your project needs a build step (Node, Hugo, etc.)
+      - name: Install Node
+        uses: actions/setup-node@v4
         with:
-          sftp: true
-          host: ${{ secrets.HOST }}
-          port: 22
+          node-version: '18'
+
+      - name: Build project
+        run: |
+          npm install
+          npm run build
+        # remove these lines if you do not have a build step
+
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-
-          local_folder: "./"
-          remote_folder: "/kunden/homepages/19/d512186843/htdocs/arthurssite/fromGit"
-
-          include: '["**/*"]'
-          exclude: '[".git/**"]'
-          cleanup: false
-
-      - name: Summarize deployment result
-        if: always()
-        run: |
-          COUNT=${{ steps.inventory.outputs.count }}
-          echo "Files detected before upload: ${COUNT}"
-
-          if [ "${{ steps.sftp_deploy.outcome }}" != "success" ]; then
-            echo "Upload step did not finish successfully; review previous logs."
-          elif [ "$COUNT" -eq 0 ]; then
-            echo "Deployment skipped because no files were available to upload."
-          else
-            echo "Upload step completed successfully; see 'Upload via SFTP' logs for the list of transferred files."
-          fi
+          server: ${{ secrets.HOST }}
+          port: 22
+          local_path: '.'   # change this if needed!
+          remote_path: ${{ secrets.Pfad }}
+          sftp_only: true
+          delete_remote_files: true   # optional: cleans remote before upload
