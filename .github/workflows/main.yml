@@ -15,11 +15,12 @@ jobs:
       - name: Upload via SFTP
         uses: sand4rt/ftp-deployer@v1.5
         with:
+          sftp: true
           host: ${{ secrets.HOST }}
           port: 22
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          protocol: sftp
-          local_path: "./"
-          server_path: "/arthurssite/newfromGit"
+          local_folder: "./"
+          remote_folder: "/arthurssite/newfromGit"
           cleanup: false
+
