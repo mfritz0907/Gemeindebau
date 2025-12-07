@@ -15,7 +15,7 @@ jobs:
       - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: db5012502939.hosting-data.io
+          server: home512186843.1and1-data.host
           username: dbu5509889
           password: ratnitz11
           port: 21
