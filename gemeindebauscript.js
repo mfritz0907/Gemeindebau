@@ -269,6 +269,106 @@ function zoomForFullWindow(desiredZoomLevel) {
     return clamp(adjusted, 0, 5);
 }
 
+function parseStreetViewLink(link) {
+    if (!link || typeof link !== "string") return null;
+
+    try {
+        const url = new URL(link.trim(), window.location.href);
+        const params = url.searchParams;
+
+        const result = {};
+
+        const viewpoint = params.get("viewpoint") || params.get("cbll");
+        if (viewpoint && viewpoint.includes(",")) {
+            const [latStr, lngStr] = viewpoint.split(",").map((v) => v.trim());
+            const lat = Number(latStr);
+            const lng = Number(lngStr);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                result.position = { lat, lng };
+            }
+        }
+
+        const pathCoordsMatch = url.pathname.match(/@([-\d.]+),([-\d.]+)/);
+        if (!result.position && pathCoordsMatch) {
+            const lat = Number(pathCoordsMatch[1]);
+            const lng = Number(pathCoordsMatch[2]);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                result.position = { lat, lng };
+            }
+        }
+
+        const headingParams = ["heading", "yaw", "y"]; // prefer explicit heading params
+        for (const key of headingParams) {
+            const v = params.get(key);
+            if (v !== null) {
+                const num = Number(v);
+                if (Number.isFinite(num)) {
+                    result.heading = num;
+                    break;
+                }
+            }
+        }
+
+        const pitchParams = ["pitch", "p"]; // Google shares pitch explicitly
+        for (const key of pitchParams) {
+            const v = params.get(key);
+            if (v !== null) {
+                const num = Number(v);
+                if (Number.isFinite(num)) {
+                    result.pitch = num;
+                    break;
+                }
+            }
+        }
+
+        const fov = params.get("fov") || params.get("f");
+        if (fov !== null) {
+            const num = Number(fov);
+            if (Number.isFinite(num)) {
+                result.fov = num;
+            }
+        }
+
+        // Path style e.g. /@48.2,16.3,3a,75y,20h,90t -> grab heading/pitch from "y" and "h" segments
+        const pathViewMatch = url.pathname.match(/@[^/]*?,([\d.]+)y,([-\d.]+)h/);
+        if (!result.heading && pathViewMatch) {
+            const num = Number(pathViewMatch[1]);
+            if (Number.isFinite(num)) result.heading = num;
+        }
+        if (!result.pitch && pathViewMatch) {
+            const num = Number(pathViewMatch[2]);
+            if (Number.isFinite(num)) result.pitch = num;
+        }
+
+        return Object.keys(result).length ? result : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function derivePanoState(row) {
+    const parsed = parseStreetViewLink(row?.streetviewlink);
+    const lat = Number(row?.lat);
+    const lng = Number(row?.lng);
+    const fallbackPosition = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+    const position = parsed?.position || fallbackPosition;
+
+    const heading = Number.isFinite(parsed?.heading) ? parsed.heading : Number(row?.heading) || 0;
+    const pitch = Number.isFinite(parsed?.pitch) ? parsed.pitch : Number(row?.pitch) || 0;
+
+    let baseZoomLevel;
+    if (Number.isFinite(parsed?.fov)) {
+        baseZoomLevel = fovToZoomLevel(parsed.fov);
+    } else {
+        // Your DB 'zoom' column is FOV degrees (10..100) saved by update_view.php.
+        // Convert FOV → SV zoom level, then adjust for pane size to match full-window perception.
+        const rawZoom = Number(row?.zoom);
+        baseZoomLevel = rawZoom > 5 ? fovToZoomLevel(rawZoom) : clamp(rawZoom, 0, 5);
+    }
+
+    return { position, heading, pitch, baseZoomLevel };
+}
+
 function setupPanoExpansion() {
     const panoEl = document.getElementById("pano");
     if (!panoEl) return;
@@ -356,20 +456,16 @@ window.placeMarkers = function (rows) {
         const m = new google.maps.Marker({ position: pos, map, title: row.Title || "" });
 
         m.addListener("click", () => {
-            const heading = Number(row.heading) || 0;
-            const pitch = Number(row.pitch) || 0;
+            const panoState = derivePanoState(row);
+            const { position, heading, pitch, baseZoomLevel } = panoState;
 
             enablePanoExpansionCue();
 
-            // Your DB 'zoom' column is FOV degrees (10..100) saved by update_view.php.
-            // Convert FOV → SV zoom level, then adjust for pane size to match full-window perception.
-            const rawZoom = Number(row.zoom);
-            const baseZoomLevel = rawZoom > 5 ? fovToZoomLevel(rawZoom) : clamp(rawZoom, 0, 5);
             const applyZoom = () => pano.setZoom(zoomForFullWindow(baseZoomLevel));
 
             // Make pano visible & set base attributes first
             pano.setVisible(true);
-            pano.setPosition(pos);
+            pano.setPosition(position || pos);
             pano.setPov({ heading, pitch });
 
             // Force layout and apply zoom; re-apply after pano change to avoid late "zoom jump"
