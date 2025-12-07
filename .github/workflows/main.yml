@@ -20,6 +20,6 @@ jobs:
           password: ratnitz11
           port: 22
           source: "./"
-          target: "/arthurssite/newfromGit
+          target: "./arthurssite/newfromGit
           overwrite: true
           rm: false
