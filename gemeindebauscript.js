@@ -265,6 +265,30 @@ function setText(id, v) {
     if (el) el.textContent = v;
 }
 
+function setRecordTitle(id, recordId, title) {
+    const container = document.getElementById(id);
+    if (!container) return;
+
+    const hasId = recordId !== undefined && recordId !== null && recordId !== "";
+    const hasTitle = Boolean(title);
+
+    container.innerHTML = "";
+
+    if (!hasId && !hasTitle) return;
+
+    if (hasId) {
+        const idSpan = document.createElement("span");
+        idSpan.textContent = `#${recordId}${hasTitle ? " — " : ""}`;
+        container.append(idSpan);
+    }
+
+    if (hasTitle) {
+        const titleEl = document.createElement("strong");
+        titleEl.textContent = title;
+        container.append(titleEl);
+    }
+}
+
 /* -------------------- Markers & interactions -------------------- */
 
 // Expose to window for debugging
@@ -310,7 +334,7 @@ window.placeMarkers = function (rows) {
                 setTimeout(applyZoom, 0);
             });
 
-            setText("record-id-textbox", `#${row.id} — ${row.Title || ""}`);
+            setRecordTitle("record-id-textbox", row.id, row.Title || "");
             setText("art-textbox", row.art || "");
             setText("architecture-textbox", row.architecture || "");
             setText("architect-textbox", row.all_architects || "");
