@@ -12,6 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug repository contents before deploy
+        run: |
+          echo "Listing repository contents before deployment:"
+          find . -maxdepth 3 -type f -print
+
       - name: Upload via SFTP
         uses: sand4rt/ftp-deployer@v1.5
         with:
