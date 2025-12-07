@@ -13,19 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Optional: If your project needs a build step (Node, Hugo, etc.)
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Build project
-        run: |
-          npm install
-          npm run build
-        # remove these lines if you do not have a build step
-
-      - name: Deploy via SFTP
+          - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           username: ${{ secrets.USER }}
