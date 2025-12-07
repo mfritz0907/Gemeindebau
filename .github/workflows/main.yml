@@ -21,4 +21,4 @@ jobs:
           port: 21
           protocol: ftp
           server-dir: /public_html/
-          local-dir: ./arthurssite/Relaunch/
+          local-dir: /arthurssite/newfromGit/
