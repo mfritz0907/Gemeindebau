@@ -1,4 +1,4 @@
-      - name: Deploy via SFTP
+      name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           username: ${{ secrets.USER }}
