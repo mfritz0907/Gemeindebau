@@ -1,0 +1,24 @@
+name: Deploy via FTP
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: db5012502939.hosting-data.io
+          username: dbu5509889
+          password: ratnitz11
+          port: 21
+          protocol: ftp
+          server-dir: /public_html/
+          local-dir: ./arthurssite/Relaunch/
