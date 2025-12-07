@@ -21,12 +21,9 @@ jobs:
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
 
-          # upload only your project files
           local_folder: "./"
-          
-          # IMPORTANT: make sure this path exists on IONOS
           remote_folder: "/kunden/homepages/19/d512186843/htdocs/arthurssite/fromGit"
 
-          include: '**/*'
-          exclude: '.git/**'
+          include: '["**/*"]'
+          exclude: '[".git/**"]'
           cleanup: false
