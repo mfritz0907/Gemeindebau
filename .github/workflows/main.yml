@@ -1,24 +1,25 @@
-name: Deploy via FTP
+name: SFTP Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: FTP Deploy
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Deploy via SFTP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          server: home512186843.1and1-data.host
+          host:  home512186843.1and1-data.host
           username: dbu5509889
           password: ratnitz11
-          port: 21
-          protocol: ftp
-          server-dir: //arthurssite/newfromGit/
-          local-dir: 
+          port: 22
+          source: "./"
+          target: "/arthurssite/newfromGit
+          overwrite: true
+          rm: false
