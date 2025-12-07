@@ -18,4 +18,7 @@ A green job in the log only means the action finished without hitting an error c
 
 ### Quick checks
 
-The workflow now prints the repository contents (via `find . -maxdepth 3 -type f`) before deploying so you can confirm files are present in the runner workspace. If files are present locally, confirm the remote directory exists and is writable for the configured user.
+- The workflow prints the repository contents (via `find . -maxdepth 3 -type f`) before deploying so you can confirm files are present in the runner workspace.
+- It also counts the number of files available for upload (excluding `.git`). The **Summarize deployment result** step will tell you whether the upload step succeeded and whether there were any files to send. You can see both messages directly in the GitHub Actions log for the `SFTP Deploy` workflow run.
+
+If files are present locally, confirm the remote directory exists and is writable for the configured user.
