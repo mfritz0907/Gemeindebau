@@ -17,7 +17,15 @@ jobs:
           echo "Listing repository contents before deployment:"
           find . -maxdepth 3 -type f -print
 
+      - name: Inventory files to deploy
+        id: inventory
+        run: |
+          FILE_COUNT=$(find . -path './.git' -prune -o -type f -print | wc -l)
+          echo "Found ${FILE_COUNT} files (excluding .git) available for upload."
+          echo "count=${FILE_COUNT}" >> "$GITHUB_OUTPUT"
+
       - name: Upload via SFTP
+        id: sftp_deploy
         uses: sand4rt/ftp-deployer@v1.5
         with:
           sftp: true
@@ -32,3 +40,17 @@ jobs:
           include: '["**/*"]'
           exclude: '[".git/**"]'
           cleanup: false
+
+      - name: Summarize deployment result
+        if: always()
+        run: |
+          COUNT=${{ steps.inventory.outputs.count }}
+          echo "Files detected before upload: ${COUNT}"
+
+          if [ "${{ steps.sftp_deploy.outcome }}" != "success" ]; then
+            echo "Upload step did not finish successfully; review previous logs."
+          elif [ "$COUNT" -eq 0 ]; then
+            echo "Deployment skipped because no files were available to upload."
+          else
+            echo "Upload step completed successfully; see 'Upload via SFTP' logs for the list of transferred files."
+          fi
