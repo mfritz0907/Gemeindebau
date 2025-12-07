@@ -20,5 +20,5 @@ jobs:
           password: ratnitz11
           port: 21
           protocol: ftp
-          server-dir: /public_html/
-          local-dir: /arthurssite/newfromGit/
+          server-dir: //arthurssite/newfromGit/
+          local-dir: 
