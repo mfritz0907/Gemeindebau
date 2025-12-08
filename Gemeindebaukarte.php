@@ -28,36 +28,11 @@ if (file_exists($configPath)) {
             </div>
             <div id="status" class="status-pill" role="status" aria-live="polite">Bereit</div>
         </div>
-
-        <form id="search-form" class="search-form" autocomplete="off" role="search" aria-label="Gebäude filtern">
-            <label class="visually-hidden" for="q">Suchbegriff</label>
-            <input id="q" name="q" type="text" placeholder="Suche (Titel, Stichwort) …" aria-describedby="q-hint" />
-            <span id="q-hint" class="visually-hidden">Gib Titel, Architektur- oder Stichwörter ein.</span>
-
-            <label class="visually-hidden" for="zipcode">Postleitzahl</label>
-            <input id="zipcode" name="zipcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="postal-code" placeholder="PLZ" />
-
-            <fieldset class="decades">
-                <legend class="visually-hidden">Baujahrzehnte</legend>
-                <label><input type="checkbox" name="decade[]" value="1910">1910er</label>
-                <label><input type="checkbox" name="decade[]" value="1920">1920er</label>
-                <label><input type="checkbox" name="decade[]" value="1930">1930er</label>
-                <label><input type="checkbox" name="decade[]" value="1940">1940er</label>
-                <label><input type="checkbox" name="decade[]" value="1950">1950er</label>
-                <label><input type="checkbox" name="decade[]" value="1960">1960er</label>
-                <label><input type="checkbox" name="decade[]" value="1970">1970er</label>
-            </fieldset>
-
-            <button class="primary" type="submit" aria-label="Suche starten">Suchen</button>
-            <button id="reset-btn" type="button" aria-label="Filter zurücksetzen">Zurücksetzen</button>
-            <button id="kunst-btn" type="button" aria-label="Nur mit Kunst anzeigen">Gemeindebauten mit Kunst</button>
-            <button id="streetview-btn" type="button" aria-label="Nur mit Streetview">Gemeindebauten mit Streetview</button>
-        </form>
     </header>
 
     <div class="container">
         <div class="left" aria-label="Karte">
-            <div class="panel">
+            <div class="panel map-panel">
                 <div class="panel-heading">
                     <div>
                         <p class="eyebrow">Karte</p>
@@ -65,6 +40,30 @@ if (file_exists($configPath)) {
                     </div>
                     <button type="button" class="ghost" onclick="showRandomMarker()" aria-label="Zufälligen Ort anzeigen">Zufälligen Ort</button>
                 </div>
+                <form id="search-form" class="search-form" autocomplete="off" role="search" aria-label="Gebäude filtern">
+                    <label class="visually-hidden" for="q">Suchbegriff</label>
+                    <input id="q" name="q" type="text" placeholder="Suche (Titel, Stichwort) …" aria-describedby="q-hint" />
+                    <span id="q-hint" class="visually-hidden">Gib Titel, Architektur- oder Stichwörter ein.</span>
+
+                    <label class="visually-hidden" for="zipcode">Postleitzahl</label>
+                    <input id="zipcode" name="zipcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="postal-code" placeholder="PLZ" />
+
+                    <fieldset class="decades">
+                        <legend class="visually-hidden">Baujahrzehnte</legend>
+                        <label><input type="checkbox" name="decade[]" value="1910">1910er</label>
+                        <label><input type="checkbox" name="decade[]" value="1920">1920er</label>
+                        <label><input type="checkbox" name="decade[]" value="1930">1930er</label>
+                        <label><input type="checkbox" name="decade[]" value="1940">1940er</label>
+                        <label><input type="checkbox" name="decade[]" value="1950">1950er</label>
+                        <label><input type="checkbox" name="decade[]" value="1960">1960er</label>
+                        <label><input type="checkbox" name="decade[]" value="1970">1970er</label>
+                    </fieldset>
+
+                    <button class="primary" type="submit" aria-label="Suche starten">Suchen</button>
+                    <button id="reset-btn" type="button" aria-label="Filter zurücksetzen">Zurücksetzen</button>
+                    <button id="kunst-btn" type="button" aria-label="Nur mit Kunst anzeigen">Gemeindebauten mit Kunst</button>
+                    <button id="streetview-btn" type="button" aria-label="Nur mit Streetview">Gemeindebauten mit Streetview</button>
+                </form>
                 <div id="map" class="map"></div>
             </div>
         </div>
