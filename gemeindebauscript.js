@@ -688,13 +688,22 @@ window.placeMarkers = function (rows) {
 
     const bounds = new google.maps.LatLngBounds();
 
+    const markerIcon = {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 6,
+        fillColor: "#d32f2f",
+        fillOpacity: 0.9,
+        strokeColor: "#ffffff",
+        strokeWeight: 1.5,
+    };
+
     rows.forEach((row) => {
         const lat = parseFloat(row.lat);
         const lng = parseFloat(row.lng);
         if (Number.isNaN(lat) || Number.isNaN(lng)) return;
 
         const pos = { lat, lng };
-        const m = new google.maps.Marker({ position: pos, map, title: row.Title || "" });
+        const m = new google.maps.Marker({ position: pos, map, title: row.Title || "", icon: markerIcon });
 
         m.addListener("click", () => {
             enablePanoExpansionCue();
