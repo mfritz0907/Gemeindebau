@@ -11,6 +11,34 @@ let initialRandomShown = false;
 let hasActiveSelection = false;
 let panoExpanded = false;
 
+function showMapError(message) {
+    const status = document.getElementById("status");
+    if (status) {
+        status.textContent = message;
+        status.classList.add("status-error");
+    }
+
+    const mapEl = document.getElementById("map");
+    if (mapEl) {
+        mapEl.classList.add("map-error");
+        mapEl.innerHTML = `<div class="map-error-overlay" role="alert">${message}</div>`;
+    }
+
+    console.error(message);
+}
+
+// Google Maps auth failure callback
+window.gm_authFailure = function () {
+    showMapError(
+        "Google Maps API-Schlüssel ist ungültig oder nicht korrekt freigeschaltet. Bitte Schlüssel in dbconnect/config_local.php prüfen."
+    );
+};
+
+// Called when no key is provided at all (set by PHP template)
+window.notifyMissingMapsKey = function () {
+    showMapError("Google Maps API-Schlüssel fehlt. Bitte GOOGLE_MAPS_API_KEY in dbconnect/config_local.php setzen.");
+};
+
 /* -------------------- Map bootstrap -------------------- */
 
 // Google Maps callback must be global
