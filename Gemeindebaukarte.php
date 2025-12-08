@@ -122,6 +122,9 @@ if (file_exists($configPath)) {
 <?php else: ?>
     <script>
         console.warn('Google Maps API key is missing. Please set GOOGLE_MAPS_API_KEY in dbconnect/config_local.php.');
+        if (window.notifyMissingMapsKey) {
+            window.notifyMissingMapsKey();
+        }
     </script>
 <?php endif; ?>
 </body>
