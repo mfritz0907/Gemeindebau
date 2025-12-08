@@ -280,6 +280,22 @@ function clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
 }
 
+function getRowPosition(row) {
+    const parsed = parseStreetViewLink(row?.streetviewlink);
+    const pos = parsed?.position;
+    if (pos && Number.isFinite(pos.lat) && Number.isFinite(pos.lng)) {
+        return { lat: pos.lat, lng: pos.lng };
+    }
+
+    const lat = Number(row?.lat);
+    const lng = Number(row?.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat, lng };
+    }
+
+    return null;
+}
+
 /**
  * Convert FOV degrees (what your DB stores via update_view.php) to Street View zoom level.
  * Approx: zoomLevel = log2(180 / fovDeg)
@@ -560,7 +576,12 @@ function ensureSlideshowPano() {
 
 function refreshSlideshowData() {
     slideshowRows = Array.isArray(lastRows)
-        ? lastRows.filter((row) => Number.isFinite(Number(row?.lat)) && Number.isFinite(Number(row?.lng)))
+        ? lastRows
+              .map((row) => {
+                  const pos = getRowPosition(row);
+                  return pos ? { ...row, _position: pos } : null;
+              })
+              .filter(Boolean)
         : [];
     slideshowIndex = 0;
 }
@@ -583,7 +604,7 @@ function showSlideshowSlide(index) {
     const row = slideshowRows[slideshowIndex];
     if (!row) return;
 
-    const fallback = { lat: Number(row.lat), lng: Number(row.lng) };
+    const fallback = row._position || getRowPosition(row);
     applyPanoView(slideshowPano, row, fallback, "slideshow-pano");
 
     const artText = row.art?.trim();
@@ -698,11 +719,9 @@ window.placeMarkers = function (rows) {
     };
 
     rows.forEach((row) => {
-        const lat = parseFloat(row.lat);
-        const lng = parseFloat(row.lng);
-        if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+        const pos = getRowPosition(row);
+        if (!pos) return;
 
-        const pos = { lat, lng };
         const m = new google.maps.Marker({ position: pos, map, title: row.Title || "", icon: markerIcon });
 
         m.addListener("click", () => {
@@ -726,11 +745,9 @@ window.placeMarkers = function (rows) {
     if (markers.length > 1) {
         map.fitBounds(bounds);
     } else {
-        const first = rows[0];
-        const lat = parseFloat(first.lat);
-        const lng = parseFloat(first.lng);
-        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-            map.panTo({ lat, lng });
+        const pos = getRowPosition(rows[0]);
+        if (pos) {
+            map.panTo(pos);
         }
     }
 };
