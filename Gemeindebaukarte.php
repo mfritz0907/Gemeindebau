@@ -26,7 +26,9 @@ if (file_exists($configPath)) {
                 <h1>Gemeindebaukarte</h1>
                 <p class="subtitle">Entdecke Architektur, Kunst am Bau und Street View Aufnahmen in einem klaren Überblick.</p>
             </div>
-            <div id="status" class="status-pill" role="status" aria-live="polite">Bereit</div>
+            <div class="header-actions">
+                <div id="status" class="status-pill" role="status" aria-live="polite">Bereit</div>
+            </div>
         </div>
     </header>
 

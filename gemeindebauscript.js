@@ -10,6 +10,15 @@ let map, pano, markers = [];
 let initialRandomShown = false;
 let hasActiveSelection = false;
 let panoExpanded = false;
+let lastRows = [];
+
+// Slideshow state
+let slideshowPano = null;
+let slideshowTimer = null;
+let slideshowRows = [];
+let slideshowIndex = 0;
+let slideshowIntervalMs = 10000;
+let slideshowRunning = false;
 
 function showMapError(message) {
     const status = document.getElementById("status");
@@ -58,6 +67,7 @@ window.initMap = function () {
     map.setStreetView(pano);
 
     setupPanoExpansion();
+    setupSlideshow();
 
     wireForm();
 
@@ -286,8 +296,8 @@ function fovToZoomLevel(fovDeg) {
  * The smaller the pane vs. the full window, the more we reduce zoom.
  * Uses height ratio: correction ≈ log2(H / h)
  */
-function zoomForFullWindow(desiredZoomLevel) {
-    const panoEl = document.getElementById("pano");
+function zoomForFullWindow(desiredZoomLevel, elementId = "pano") {
+    const panoEl = document.getElementById(elementId);
     const h = Math.max(1, panoEl?.clientHeight || 1);
     const H = Math.max(1, window.innerHeight || h);
 
@@ -295,6 +305,28 @@ function zoomForFullWindow(desiredZoomLevel) {
     const adjusted = Number.isFinite(desiredZoomLevel) ? desiredZoomLevel - correction : 0;
 
     return clamp(adjusted, 0, 5);
+}
+
+function applyPanoView(targetPano, row, fallbackPosition, elementId = "pano") {
+    if (!targetPano || !row) return;
+
+    const panoState = derivePanoState(row);
+    const { position, heading, pitch, baseZoomLevel } = panoState;
+    const pos = position || fallbackPosition;
+    if (!pos) return;
+
+    const applyZoom = () => targetPano.setZoom(zoomForFullWindow(baseZoomLevel, elementId));
+
+    targetPano.setVisible(true);
+    targetPano.setPosition(pos);
+    targetPano.setPov({ heading, pitch });
+
+    google.maps.event.trigger(targetPano, "resize");
+    applyZoom();
+    google.maps.event.addListenerOnce(targetPano, "pano_changed", () => {
+        google.maps.event.trigger(targetPano, "resize");
+        setTimeout(applyZoom, 0);
+    });
 }
 
 function capturePanoView() {
@@ -450,6 +482,141 @@ function enablePanoExpansionCue() {
     panoEl.classList.remove("expanded");
 }
 
+function setupSlideshow() {
+    const overlay = document.getElementById("slideshow");
+    const openBtn = document.getElementById("slideshow-open");
+    const closeBtn = document.getElementById("slideshow-close");
+    const toggleBtn = document.getElementById("slideshow-toggle");
+    const intervalSelect = document.getElementById("slideshow-interval");
+    const isStandalone = overlay?.dataset?.standalone === "true";
+
+    if (!overlay) return;
+
+    const updateToggleLabel = () => {
+        if (toggleBtn) toggleBtn.textContent = slideshowRunning ? "Stop" : "Start";
+    };
+
+    const stopAndHide = () => {
+        stopSlideshow();
+        if (!isStandalone) overlay.hidden = true;
+        updateToggleLabel();
+    };
+
+    openBtn?.addEventListener("click", () => {
+        overlay.hidden = false;
+        ensureSlideshowPano();
+        refreshSlideshowData();
+        showSlideshowSlide(slideshowIndex);
+        updateToggleLabel();
+    });
+
+    closeBtn?.addEventListener("click", stopAndHide);
+
+    toggleBtn?.addEventListener("click", () => {
+        if (slideshowRunning) {
+            stopSlideshow();
+        } else {
+            startSlideshow();
+        }
+        updateToggleLabel();
+    });
+
+    intervalSelect?.addEventListener("change", (e) => {
+        const val = Number(e.target.value);
+        if (Number.isFinite(val) && val > 0) {
+            slideshowIntervalMs = val;
+            if (slideshowRunning) {
+                startSlideshow();
+                updateToggleLabel();
+            }
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !overlay.hidden) {
+            stopAndHide();
+        }
+    });
+
+    if (!openBtn && !overlay.hidden) {
+        ensureSlideshowPano();
+        refreshSlideshowData();
+        showSlideshowSlide(slideshowIndex);
+        updateToggleLabel();
+    }
+}
+
+function ensureSlideshowPano() {
+    if (slideshowPano) return slideshowPano;
+
+    slideshowPano = new google.maps.StreetViewPanorama(document.getElementById("slideshow-pano"), {
+        visible: true,
+        motionTracking: false,
+        fullscreenControl: true,
+        zoomControl: true,
+    });
+    return slideshowPano;
+}
+
+function refreshSlideshowData() {
+    slideshowRows = Array.isArray(lastRows)
+        ? lastRows.filter((row) => Number.isFinite(Number(row?.lat)) && Number.isFinite(Number(row?.lng)))
+        : [];
+    slideshowIndex = 0;
+}
+
+function setSlideshowArtText(text) {
+    const artBox = document.getElementById("slideshow-art");
+    if (!artBox) return;
+    artBox.textContent = text;
+}
+
+function showSlideshowSlide(index) {
+    ensureSlideshowPano();
+
+    if (!slideshowRows.length) {
+        setSlideshowArtText("Keine Street-View-Daten geladen. Lade Marker und versuche es erneut.");
+        return;
+    }
+
+    slideshowIndex = (index + slideshowRows.length) % slideshowRows.length;
+    const row = slideshowRows[slideshowIndex];
+    if (!row) return;
+
+    const fallback = { lat: Number(row.lat), lng: Number(row.lng) };
+    applyPanoView(slideshowPano, row, fallback, "slideshow-pano");
+
+    const artText = row.art?.trim();
+    const title = row.Title ? `${row.Title}: ` : "";
+    setSlideshowArtText((artText ? title + artText : `${title}Keine Kunstangabe vorhanden.`).trim());
+}
+
+function startSlideshow() {
+    const previousIndex = slideshowIndex;
+    refreshSlideshowData();
+    if (!slideshowRows.length) {
+        setSlideshowArtText("Keine Street-View-Daten geladen. Lade Marker und versuche es erneut.");
+        slideshowRunning = false;
+        return;
+    }
+
+    if (previousIndex < slideshowRows.length) {
+        slideshowIndex = previousIndex;
+    }
+
+    if (slideshowTimer) clearInterval(slideshowTimer);
+
+    slideshowRunning = true;
+    showSlideshowSlide(slideshowIndex);
+    slideshowTimer = setInterval(() => showSlideshowSlide(slideshowIndex + 1), slideshowIntervalMs);
+}
+
+function stopSlideshow() {
+    if (slideshowTimer) clearInterval(slideshowTimer);
+    slideshowTimer = null;
+    slideshowRunning = false;
+}
+
 function setText(id, v) {
     const el = document.getElementById(id);
     if (el) el.textContent = v;
@@ -497,6 +664,7 @@ window.placeMarkers = function (rows) {
     // Clear old markers
     markers.forEach((m) => m.setMap(null));
     markers = [];
+    lastRows = Array.isArray(rows) ? [...rows] : [];
 
     if (!rows || !rows.length) {
         return;
@@ -513,25 +681,9 @@ window.placeMarkers = function (rows) {
         const m = new google.maps.Marker({ position: pos, map, title: row.Title || "" });
 
         m.addListener("click", () => {
-            const panoState = derivePanoState(row);
-            const { position, heading, pitch, baseZoomLevel } = panoState;
-
             enablePanoExpansionCue();
 
-            const applyZoom = () => pano.setZoom(zoomForFullWindow(baseZoomLevel));
-
-            // Make pano visible & set base attributes first
-            pano.setVisible(true);
-            pano.setPosition(position || pos);
-            pano.setPov({ heading, pitch });
-
-            // Force layout and apply zoom; re-apply after pano change to avoid late "zoom jump"
-            google.maps.event.trigger(pano, "resize");
-            applyZoom();
-            google.maps.event.addListenerOnce(pano, "pano_changed", () => {
-                google.maps.event.trigger(pano, "resize");
-                setTimeout(applyZoom, 0);
-            });
+            applyPanoView(pano, row, pos, "pano");
 
             setRecordTitle("record-id-textbox", row.id, row.Title || "");
             setText("art-textbox", row.art || "");
