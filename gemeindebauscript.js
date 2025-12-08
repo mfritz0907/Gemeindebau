@@ -296,6 +296,17 @@ function getRowPosition(row) {
     return null;
 }
 
+function isEligibleForRandomView(row) {
+    if (!row) return false;
+
+    const hasStreetView = Boolean(String(row.streetviewlink || "").trim());
+    const hasArt = Boolean(String(row.art || "").trim());
+    const heading = Number(row.heading);
+    const hasHeading = Number.isFinite(heading);
+
+    return hasStreetView && hasArt && hasHeading;
+}
+
 /**
  * Convert FOV degrees (what your DB stores via update_view.php) to Street View zoom level.
  * Approx: zoomLevel = log2(180 / fovDeg)
@@ -578,6 +589,7 @@ function refreshSlideshowData() {
     slideshowRows = Array.isArray(lastRows)
         ? lastRows
               .map((row) => {
+                  if (!isEligibleForRandomView(row)) return null;
                   const pos = getRowPosition(row);
                   return pos ? { ...row, _position: pos } : null;
               })
@@ -684,9 +696,11 @@ function setRecordTitle(id, recordId, title) {
 }
 
 function showRandomMarker() {
-    if (!markers.length) return;
-    const idx = Math.floor(Math.random() * markers.length);
-    const marker = markers[idx];
+    const eligibleMarkers = markers.filter((m) => isEligibleForRandomView(m?.__row));
+    if (!eligibleMarkers.length) return;
+
+    const idx = Math.floor(Math.random() * eligibleMarkers.length);
+    const marker = eligibleMarkers[idx];
     if (!marker) return;
 
     // Center map on the selected marker and reuse the existing click handler to populate details.
@@ -723,6 +737,7 @@ window.placeMarkers = function (rows) {
         if (!pos) return;
 
         const m = new google.maps.Marker({ position: pos, map, title: row.Title || "", icon: markerIcon });
+        m.__row = row;
 
         m.addListener("click", () => {
             enablePanoExpansionCue();
