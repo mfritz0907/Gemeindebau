@@ -27,7 +27,6 @@ if (file_exists($configPath)) {
                 <p class="subtitle">Entdecke Architektur, Kunst am Bau und Street View Aufnahmen in einem klaren Überblick.</p>
             </div>
             <div class="header-actions">
-                <button type="button" id="slideshow-open" class="ghost" aria-label="Street-View-Slideshow starten">Slideshow</button>
                 <div id="status" class="status-pill" role="status" aria-live="polite">Bereit</div>
             </div>
         </div>
@@ -115,33 +114,6 @@ if (file_exists($configPath)) {
     <noscript>
         <p>Diese Anwendung benötigt JavaScript, um Karte und Street View anzuzeigen.</p>
     </noscript>
-
-    <div id="slideshow" class="slideshow" hidden>
-        <div class="slideshow__header">
-            <div>
-                <p class="eyebrow">Alternative Ansicht</p>
-                <h2>Street View Slideshow</h2>
-            </div>
-            <div class="slideshow__controls" aria-live="polite">
-                <label for="slideshow-interval">Intervall:</label>
-                <select id="slideshow-interval" name="slideshow-interval">
-                    <option value="5000">5 Sekunden</option>
-                    <option value="10000" selected>10 Sekunden</option>
-                    <option value="20000">20 Sekunden</option>
-                    <option value="30000">30 Sekunden</option>
-                </select>
-                <button type="button" id="slideshow-toggle" class="primary">Start</button>
-                <button type="button" id="slideshow-close" aria-label="Slideshow schließen">Schließen</button>
-            </div>
-        </div>
-        <div class="slideshow__body">
-            <div id="slideshow-pano" class="slideshow__pano" role="presentation"></div>
-            <div class="slideshow__caption">
-                <p class="eyebrow">Kunst am Bau</p>
-                <div id="slideshow-art" class="slideshow__text">Wähle Marker aus oder starte die Slideshow.</div>
-            </div>
-        </div>
-    </div>
 
     <script src="gemeindebauscript.js"></script>
     <!-- Google Maps key is read from dbconnect/config_local.php -->

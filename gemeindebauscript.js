@@ -488,6 +488,7 @@ function setupSlideshow() {
     const closeBtn = document.getElementById("slideshow-close");
     const toggleBtn = document.getElementById("slideshow-toggle");
     const intervalSelect = document.getElementById("slideshow-interval");
+    const isStandalone = overlay?.dataset?.standalone === "true";
 
     if (!overlay) return;
 
@@ -497,7 +498,7 @@ function setupSlideshow() {
 
     const stopAndHide = () => {
         stopSlideshow();
-        overlay.hidden = true;
+        if (!isStandalone) overlay.hidden = true;
         updateToggleLabel();
     };
 
@@ -536,6 +537,13 @@ function setupSlideshow() {
             stopAndHide();
         }
     });
+
+    if (!openBtn && !overlay.hidden) {
+        ensureSlideshowPano();
+        refreshSlideshowData();
+        showSlideshowSlide(slideshowIndex);
+        updateToggleLabel();
+    }
 }
 
 function ensureSlideshowPano() {

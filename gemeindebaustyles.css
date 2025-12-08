@@ -288,6 +288,29 @@ html, body {
     box-sizing: border-box;
 }
 
+.slideshow--standalone {
+    position: static;
+    inset: auto;
+    background: linear-gradient(120deg, rgba(29, 114, 184, 0.1), rgba(91, 33, 182, 0.08)), var(--bg);
+    backdrop-filter: none;
+    min-height: calc(100vh - 160px);
+    box-shadow: none;
+    padding: 24px;
+}
+
+.slideshow--standalone .slideshow__body {
+    height: calc(100vh - 260px);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.14);
+}
+
+.slideshow--standalone .slideshow__header {
+    color: var(--text);
+}
+
+.slideshow--standalone .slideshow__caption {
+    background: #0f172a;
+}
+
 .slideshow__header {
     display: flex;
     align-items: center;
