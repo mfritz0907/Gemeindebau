@@ -512,21 +512,21 @@ function setupSlideshow() {
 
     closeBtn?.addEventListener("click", stopAndHide);
 
-    toggleBtn?.addEventListener("click", () => {
+    toggleBtn?.addEventListener("click", async () => {
         if (slideshowRunning) {
             stopSlideshow();
         } else {
-            startSlideshow();
+            await startSlideshow();
         }
         updateToggleLabel();
     });
 
-    intervalSelect?.addEventListener("change", (e) => {
+    intervalSelect?.addEventListener("change", async (e) => {
         const val = Number(e.target.value);
         if (Number.isFinite(val) && val > 0) {
             slideshowIntervalMs = val;
             if (slideshowRunning) {
-                startSlideshow();
+                await startSlideshow();
                 updateToggleLabel();
             }
         }
@@ -591,8 +591,24 @@ function showSlideshowSlide(index) {
     setSlideshowArtText((artText ? title + artText : `${title}Keine Kunstangabe vorhanden.`).trim());
 }
 
-function startSlideshow() {
+async function startSlideshow() {
     const previousIndex = slideshowIndex;
+
+    if (!slideshowRows.length) {
+        const status = document.getElementById("status");
+        if (status) status.textContent = "Lade Street-View-Daten …";
+
+        try {
+            await loadMarkers();
+        } catch (err) {
+            console.error(err);
+            setSlideshowArtText("Fehler beim Laden der Street-View-Daten.");
+            if (status) status.textContent = "Fehler beim Laden der Daten.";
+            slideshowRunning = false;
+            return;
+        }
+    }
+
     refreshSlideshowData();
     if (!slideshowRows.length) {
         setSlideshowArtText("Keine Street-View-Daten geladen. Lade Marker und versuche es erneut.");
