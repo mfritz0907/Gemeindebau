@@ -112,7 +112,7 @@ if ($action === 'recordById') {
 if ($action === 'fetchStreetView') {
   $sql = "SELECT id, Title, art, streetviewlink
           FROM building
-          WHERE streetviewlink LIKE '%heading%'";
+          WHERE COALESCE(NULLIF(streetviewlink,''), '') <> ''";
   $res = $mysqli->query($sql);
   $rows = [];
   if ($res) { while ($row = $res->fetch_assoc()) { $rows[] = $row; } }
@@ -128,7 +128,7 @@ if ($action === 'mapMarkers') {
 
   $useGrouping = false; // set to true to group by (art, zipcode)
 
-  $where  = ["b.streetviewlink LIKE '%heading%'"];
+  $where  = ["COALESCE(NULLIF(b.streetviewlink,''), '') <> ''"];
   $types  = "";
   $params = [];
 
