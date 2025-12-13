@@ -12,6 +12,8 @@ let hasActiveSelection = false;
 let panoExpanded = false;
 let lastRows = [];
 
+const DEFAULT_MARKER_LIMIT = 500; // cap responses to keep startup/search fast
+
 // Slideshow state
 let slideshowPano = null;
 let slideshowTimer = null;
@@ -76,7 +78,7 @@ window.initMap = function () {
     if (status) status.textContent = "Lade Daten …";
     loadMarkers()
         .then((rows) => {
-            if (status) status.textContent = rows && rows.length ? "Fertig" : "0 Treffer";
+            if (status) status.textContent = describeResultCount(rows, DEFAULT_MARKER_LIMIT);
             if (!initialRandomShown && rows && rows.length) {
                 showRandomMarker();
                 initialRandomShown = true;
@@ -113,7 +115,7 @@ function wireForm() {
 
             if (status) status.textContent = "Lade Daten …";
             loadMarkers({ q, zipcode, decades })
-                .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
+                .then((rows) => (status ? (status.textContent = describeResultCount(rows, DEFAULT_MARKER_LIMIT)) : null))
                 .catch((err) => {
                     console.error(err);
                     if (status) status.textContent = "Fehler beim Laden der Daten.";
@@ -127,7 +129,7 @@ function wireForm() {
             if (status) status.textContent = "Lade Gemeindebauten mit Kunst …";
             // keep existing API param for back-compat
             loadMarkers({ with_art: 1 })
-                .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
+                .then((rows) => (status ? (status.textContent = describeResultCount(rows, DEFAULT_MARKER_LIMIT)) : null))
                 .catch((err) => {
                     console.error(err);
                     if (status) status.textContent = "Fehler beim Laden der Daten.";
@@ -140,7 +142,7 @@ function wireForm() {
             form?.reset();
             if (status) status.textContent = "Filter zurückgesetzt. Lade alle Daten …";
             loadMarkers()
-                .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
+                .then((rows) => (status ? (status.textContent = describeResultCount(rows, DEFAULT_MARKER_LIMIT)) : null))
                 .catch((err) => {
                     console.error(err);
                     if (status) status.textContent = "Fehler beim Laden der Daten.";
@@ -206,7 +208,8 @@ async function fetchJSON(url) {
 
 /** Existing: triggers action=mapMarkers with optional filters */
 async function loadMarkers(query = {}) {
-    const params = new URLSearchParams({ action: "mapMarkers", ...query, nocache: Date.now() });
+    const limit = query.limit ?? DEFAULT_MARKER_LIMIT;
+    const params = new URLSearchParams({ action: "mapMarkers", ...query, limit, nocache: Date.now() });
     const url = `get_data.php?${params.toString()}`;
     const data = await fetchJSON(url);
     if (!Array.isArray(data)) {
@@ -278,6 +281,13 @@ async function mapWithConcurrency(items, limit, worker) {
 // Clamp helper
 function clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
+}
+
+function describeResultCount(rows, limit) {
+    const count = Array.isArray(rows) ? rows.length : 0;
+    if (count === 0) return "0 Treffer";
+    if (limit && count >= limit) return `${count}+ Treffer (Limit ${limit})`;
+    return `${count} Treffer`;
 }
 
 function getRowPosition(row) {
