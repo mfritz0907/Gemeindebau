@@ -75,6 +75,12 @@ $mysqli->set_charset('utf8mb4');
 
 // ---- Routing ----
 $action = isset($_GET['action']) ? $_GET['action'] : '';
+// Limit + paging for heavy datasets
+$limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 500; // default cap for startup
+$offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+
+$limit  = max(10, min($limit, 2000)); // keep requests bounded
+$offset = max(0, $offset);
 
 // 1) Single record by id
 if ($action === 'recordById') {
@@ -198,14 +204,16 @@ if ($action === 'mapMarkers') {
               $whereSql
               GROUP BY art, zipcode
             ) m ON m.id = b.id
-            ORDER BY b.id ASC";
-    [$stmt, $err] = prepare_and_bind($mysqli, $sql, $types, $params);
+            ORDER BY b.id ASC
+            LIMIT ? OFFSET ?";
+    [$stmt, $err] = prepare_and_bind($mysqli, $sql, $types . "ii", [...$params, $limit, $offset]);
   } else {
     $sql = "SELECT $selectCols
             FROM building b
             $whereSql
-            ORDER BY b.id ASC";
-    [$stmt, $err] = prepare_and_bind($mysqli, $sql, $types, $params);
+            ORDER BY b.id ASC
+            LIMIT ? OFFSET ?";
+    [$stmt, $err] = prepare_and_bind($mysqli, $sql, $types . "ii", [...$params, $limit, $offset]);
   }
 
   if ($err) out(['error'=>'Prepare failed', 'detail'=>$err], 500);
