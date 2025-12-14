@@ -103,7 +103,7 @@ if (file_exists($configPath)) {
                 const toggleLabel = document.createElement('label');
                 toggleLabel.className = 'checkbox-row';
                 toggleLabel.innerHTML = `
-                    <input type="checkbox" class="art-visible-toggle" data-id="${item.id}" ${item.art_visible ? 'checked' : ''}>
+                    <input type="checkbox" class="art-visible-toggle" data-id="${item.id}" ${item.artVisible ? 'checked' : ''}>
                     <span>Kunst sichtbar</span>
                 `;
 

@@ -88,7 +88,8 @@ function resolve_art_visible_column($mysqli) {
   static $col = null;
   if ($col !== null) return $col;
 
-  $candidates = ['art_visible', 'Art_visible', 'artVisible', 'ArtVisible', 'Art visible'];
+  // Prefer the new camelCase column name but keep backward compatibility
+  $candidates = ['artVisible', 'art_visible', 'Art_visible', 'ArtVisible', 'Art visible'];
 
   foreach ($candidates as $cand) {
     $esc = $mysqli->real_escape_string($cand);
@@ -261,11 +262,11 @@ if ($action === 'streetviewByZip') {
 
   $col = resolve_art_visible_column($mysqli);
   if ($col === null) {
-    out(['error' => 'art_visible column not found'], 500);
+    out(['error' => 'artVisible column not found'], 500);
   }
   $colSql = '`' . str_replace('`', '``', $col) . '`';
 
-  $sql = "SELECT id, Title, art, architecture, zipcode, streetviewlink, {$colSql} AS art_visible
+  $sql = "SELECT id, Title, art, architecture, zipcode, streetviewlink, {$colSql} AS artVisible
           FROM building
           WHERE zipcode = ? AND COALESCE(NULLIF(streetviewlink,''), '') <> ''
           ORDER BY id ASC";
@@ -279,7 +280,7 @@ if ($action === 'streetviewByZip') {
   out($rows);
 }
 
-// 6) Update art_visible flag
+// 6) Update artVisible flag
 if ($action === 'updateArtVisible') {
   if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     out(['error' => 'Method not allowed'], 405);
@@ -296,7 +297,7 @@ if ($action === 'updateArtVisible') {
 
   $col = resolve_art_visible_column($mysqli);
   if ($col === null) {
-    out(['error' => 'art_visible column not found'], 500);
+    out(['error' => 'artVisible column not found'], 500);
   }
   $colSql = '`' . str_replace('`', '``', $col) . '`';
 
