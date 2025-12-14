@@ -82,7 +82,7 @@ window.initMap = function () {
                 initialRandomShown = true;
             }
         })
-        .catch(() => status && (status.textContent = "Fehler beim Laden der Daten."));
+        .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
 };
 
 /* -------------------- UI wiring -------------------- */
@@ -114,10 +114,7 @@ function wireForm() {
             if (status) status.textContent = "Lade Daten …";
             loadMarkers({ q, zipcode, decades })
                 .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
-                .catch((err) => {
-                    console.error(err);
-                    if (status) status.textContent = "Fehler beim Laden der Daten.";
-                });
+                .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
         });
     }
 
@@ -128,10 +125,7 @@ function wireForm() {
             // keep existing API param for back-compat
             loadMarkers({ with_art: 1 })
                 .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
-                .catch((err) => {
-                    console.error(err);
-                    if (status) status.textContent = "Fehler beim Laden der Daten.";
-                });
+                .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
         });
     }
 
@@ -141,10 +135,7 @@ function wireForm() {
             if (status) status.textContent = "Filter zurückgesetzt. Lade alle Daten …";
             loadMarkers()
                 .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
-                .catch((err) => {
-                    console.error(err);
-                    if (status) status.textContent = "Fehler beim Laden der Daten.";
-                });
+                .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
         });
     }
 
@@ -165,8 +156,7 @@ function wireForm() {
                 placeMarkers([row]);
                 if (status) status.textContent = "Fertig";
             } catch (err) {
-                console.error(err);
-                if (status) status.textContent = `Fehler beim Laden von #${id}.`;
+                handleLoadError(status, `Fehler beim Laden von #${id}`, err);
             }
         });
     }
@@ -179,8 +169,7 @@ function wireForm() {
                 const rows = await loadStreetViewMarkers(); // triggers action=fetchStreetView (and enriches with recordById)
                 if (status) status.textContent = rows.length ? "Fertig" : "0 Treffer";
             } catch (err) {
-                console.error(err);
-                if (status) status.textContent = "Fehler beim Laden der Street-View-Daten.";
+                handleLoadError(status, "Fehler beim Laden der Street-View-Daten", err);
             }
         });
     }
@@ -190,12 +179,25 @@ function wireForm() {
 
 async function fetchJSON(url) {
     const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`Backend ${res.status}: ${text || "no body"}`);
-    }
-    // Read as text first to guard against empty/non-JSON responses
+    // Read as text first so we can surface backend error messages
     const body = await res.text();
+    if (!res.ok) {
+        let detail = body || "no body";
+        try {
+            const parsed = JSON.parse(body);
+            if (parsed && typeof parsed === "object") {
+                if (parsed.detail) {
+                    detail = parsed.detail;
+                } else if (parsed.error) {
+                    detail = parsed.error;
+                }
+            }
+        } catch (e) {
+            // fall back to raw body
+        }
+
+        throw new Error(`Backend ${res.status}: ${detail}`);
+    }
     if (!body) throw new Error("Empty response body");
     try {
         return JSON.parse(body);
@@ -217,6 +219,18 @@ async function loadMarkers(query = {}) {
     }
     placeMarkers(data);
     return data;
+}
+
+function formatStatusError(prefix, err) {
+    const suffix = err?.message ? `: ${err.message}` : "";
+    return `${prefix}${suffix}`;
+}
+
+function handleLoadError(statusEl, prefix, err, { showOverlay = true } = {}) {
+    console.error(err);
+    const message = formatStatusError(prefix, err);
+    if (statusEl) statusEl.textContent = message;
+    if (showOverlay) showMapError(message);
 }
 
 /** NEW: triggers action=recordById&id=... and returns a single row (or null) */
@@ -634,9 +648,8 @@ async function startSlideshow() {
         try {
             await loadMarkers();
         } catch (err) {
-            console.error(err);
+            handleLoadError(status, "Fehler beim Laden der Daten", err, { showOverlay: false });
             setSlideshowArtText("Fehler beim Laden der Street-View-Daten.");
-            if (status) status.textContent = "Fehler beim Laden der Daten.";
             slideshowRunning = false;
             return;
         }
