@@ -1,2 +1,3 @@
 config_local.php
+dbconnect/config_local.php
 *.env

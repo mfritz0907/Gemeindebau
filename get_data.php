@@ -65,7 +65,15 @@ function prepare_and_bind($mysqli, $sql, $types = "", $params = []) {
 }
 
 // ---- DB connect ----
-require __DIR__ . '/dbconnect/config_local.php'; // defines DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+$configPath = __DIR__ . '/dbconnect/config_local.php';
+if (!is_file($configPath)) {
+  out([
+    'error'  => 'Config missing',
+    'detail' => 'Create dbconnect/config_local.php from config_local.php.example and add your database credentials.'
+  ], 500);
+}
+
+require $configPath; // defines DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
 
 $mysqli = @new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
 if ($mysqli->connect_errno) {
