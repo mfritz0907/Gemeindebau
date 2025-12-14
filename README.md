@@ -16,6 +16,12 @@ A green job in the log only means the action finished without hitting an error c
 - **Secrets or connection limits:** Incorrect `HOST`, `USER`, or `PASSWORD` values, or an SFTP server refusing connections, can prevent transfers even though the step exits successfully.
 - **Exclude patterns:** Only files matching the `include` list and not matching `exclude` are sent. With `include: ["**/*"]`, everything except `.git/**` should upload, but additional excludes would filter files.
 
+## Local setup
+
+1. Copy `dbconnect/config_local.php.example` to `dbconnect/config_local.php` and fill in your database credentials.
+2. Optionally set `GOOGLE_MAPS_API_KEY` in the same file so the Street View pages can load the Maps JavaScript API.
+3. Run the PHP scripts via your preferred web server or `php -S localhost:8000` from the repository root.
+
 ### Quick checks
 
 - The workflow prints the repository contents (via `find . -maxdepth 3 -type f`) before deploying so you can confirm files are present in the runner workspace.
