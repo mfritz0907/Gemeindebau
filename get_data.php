@@ -74,7 +74,25 @@ if ($mysqli->connect_errno) {
 $mysqli->set_charset('utf8mb4');
 
 // ---- Routing ----
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+$action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
+
+function resolve_art_visible_column($mysqli) {
+  static $col = null;
+  if ($col !== null) return $col;
+
+  $candidates = ['art_visible', 'Art_visible', 'artVisible', 'ArtVisible', 'Art visible'];
+
+  foreach ($candidates as $cand) {
+    $esc = $mysqli->real_escape_string($cand);
+    $res = $mysqli->query("SHOW COLUMNS FROM `building` LIKE '{$esc}'");
+    if ($res && $res->num_rows > 0) {
+      $col = $cand;
+      return $col;
+    }
+  }
+
+  return null;
+}
 
 // 1) Single record by id
 if ($action === 'recordById') {
@@ -215,6 +233,71 @@ if ($action === 'mapMarkers') {
   $rows = [];
   while ($row = $res->fetch_assoc()) { $rows[] = $row; }
   out($rows);
+}
+
+// 4) Distinct ZIP codes that have Street View links
+if ($action === 'streetviewZipcodes') {
+  $sql = "SELECT DISTINCT zipcode FROM building WHERE zipcode IS NOT NULL AND zipcode <> '' ORDER BY zipcode ASC";
+  $res = $mysqli->query($sql);
+  $zips = [];
+  if ($res) { while ($row = $res->fetch_assoc()) { $zips[] = $row['zipcode']; } }
+  out($zips);
+}
+
+// 5) Street View records by ZIP with art visibility flag
+if ($action === 'streetviewByZip') {
+  $zipcode  = isset($_GET['zipcode']) ? trim($_GET['zipcode']) : '';
+  if ($zipcode === '' || !ctype_digit($zipcode)) {
+    out(['error' => 'Missing/invalid zipcode'], 400);
+  }
+
+  $col = resolve_art_visible_column($mysqli);
+  if ($col === null) {
+    out(['error' => 'art_visible column not found'], 500);
+  }
+  $colSql = '`' . str_replace('`', '``', $col) . '`';
+
+  $sql = "SELECT id, Title, art, architecture, zipcode, streetviewlink, {$colSql} AS art_visible
+          FROM building
+          WHERE zipcode = ? AND COALESCE(NULLIF(streetviewlink,''), '') <> ''
+          ORDER BY id ASC";
+
+  [$stmt, $err] = prepare_and_bind($mysqli, $sql, "s", [$zipcode]);
+  if ($err) out(['error' => $err], 500);
+  if (!$stmt->execute()) out(['error'=>'Execute failed', 'detail'=>$stmt->error], 500);
+  $res = $stmt->get_result();
+  $rows = [];
+  while ($row = $res->fetch_assoc()) { $rows[] = $row; }
+  out($rows);
+}
+
+// 6) Update art_visible flag
+if ($action === 'updateArtVisible') {
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    out(['error' => 'Method not allowed'], 405);
+  }
+
+  $id = isset($_POST['id']) ? trim($_POST['id']) : '';
+  $visible = isset($_POST['visible']) ? trim($_POST['visible']) : '1';
+
+  if ($id === '' || !ctype_digit($id)) {
+    out(['error' => 'Missing/invalid id'], 400);
+  }
+
+  $visibleVal = ($visible === '1' || strtolower($visible) === 'true') ? 1 : 0;
+
+  $col = resolve_art_visible_column($mysqli);
+  if ($col === null) {
+    out(['error' => 'art_visible column not found'], 500);
+  }
+  $colSql = '`' . str_replace('`', '``', $col) . '`';
+
+  $sql = "UPDATE building SET {$colSql} = ? WHERE id = ? LIMIT 1";
+  [$stmt, $err] = prepare_and_bind($mysqli, $sql, "ii", [$visibleVal, (int)$id]);
+  if ($err) out(['error' => $err], 500);
+  if (!$stmt->execute()) out(['error'=>'Execute failed', 'detail'=>$stmt->error], 500);
+
+  out(['ok' => true, 'id' => (int)$id, 'visible' => $visibleVal]);
 }
 
 // Unknown route

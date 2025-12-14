@@ -89,6 +89,25 @@ html, body {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
+.status-pill--ready {
+    background: #e0f2fe;
+    color: #075985;
+    border-color: #bfdbfe;
+}
+
+.status-pill--info {
+    background: #ecfeff;
+    color: #0e7490;
+    border-color: #a5f3fc;
+}
+
+.status-pill--success {
+    background: #ecfdf3;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.status-pill--error,
 .status-pill.status-error {
     background: #fef2f2;
     color: #991b1b;
@@ -188,6 +207,15 @@ html, body {
     padding: 16px;
     height: calc(100vh - 130px);
     box-sizing: border-box;
+}
+
+.container--narrow {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: auto;
+    max-width: 1100px;
+    margin: 0 auto 32px;
 }
 
 .left, .right {
@@ -457,4 +485,78 @@ html, body {
         flex-direction: column;
         align-items: stretch;
     }
+}
+
+.zip-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.zip-form__row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.zip-form select {
+    padding: 9px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    min-width: 160px;
+}
+
+.zip-form .help {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.zip-results {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.zip-entry {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+}
+
+.zip-entry__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.zip-entry__iframe iframe {
+    width: 100%;
+    height: 420px;
+    border: 0;
+    border-radius: 12px;
+    margin-top: 10px;
+    background: #000;
+}
+
+.checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
 }
