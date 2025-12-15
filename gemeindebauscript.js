@@ -134,7 +134,7 @@ function wireForm() {
         artVisibleBtn.addEventListener("click", () => {
             form?.reset();
             if (status) status.textContent = "Lade Bauten mit sichtbarer Kunst …";
-            loadMarkers({ art_visible: 1 })
+            loadMarkers({ artVisible: 1 })
                 .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
                 .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
         });

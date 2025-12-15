@@ -152,7 +152,12 @@ if ($action === 'mapMarkers') {
   $zipcode  = isset($_GET['zipcode']) ? trim($_GET['zipcode']) : '';
   $decades  = isset($_GET['decades']) ? trim($_GET['decades']) : '';
   $withArt  = isset($_GET['with_art']) ? (int)$_GET['with_art'] : 0;
-  $artVisibleOnly = isset($_GET['art_visible']) ? (int)$_GET['art_visible'] : 0;
+$artVisibleOnly = 0;
+if (isset($_GET['artVisible'])) {
+  $artVisibleOnly = (int) $_GET['artVisible'];
+} elseif (isset($_GET['art_visible'])) { // legacy param name
+  $artVisibleOnly = (int) $_GET['art_visible'];
+}
 
   $useGrouping = false; // set to true to group by (art, zipcode)
 
