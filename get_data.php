@@ -84,6 +84,15 @@ $mysqli->set_charset('utf8mb4');
 // ---- Routing ----
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 
+function parse_bool_flag($value) {
+  if (is_string($value)) {
+    $value = strtolower(trim($value));
+    return in_array($value, ['1', 'true', 'yes', 'on'], true) ? 1 : 0;
+  }
+
+  return $value ? 1 : 0;
+}
+
 function resolve_art_visible_column($mysqli) {
   static $col = null;
   if ($col !== null) return $col;
@@ -152,12 +161,12 @@ if ($action === 'mapMarkers') {
   $zipcode  = isset($_GET['zipcode']) ? trim($_GET['zipcode']) : '';
   $decades  = isset($_GET['decades']) ? trim($_GET['decades']) : '';
   $withArt  = isset($_GET['with_art']) ? (int)$_GET['with_art'] : 0;
-$artVisibleOnly = 0;
-if (isset($_GET['artVisible'])) {
-  $artVisibleOnly = (int) $_GET['artVisible'];
-} elseif (isset($_GET['art_visible'])) { // legacy param name
-  $artVisibleOnly = (int) $_GET['art_visible'];
-}
+  $artVisibleOnly = 0;
+  if (isset($_GET['artVisible'])) {
+    $artVisibleOnly = parse_bool_flag($_GET['artVisible']);
+  } elseif (isset($_GET['art_visible'])) { // legacy param name
+    $artVisibleOnly = parse_bool_flag($_GET['art_visible']);
+  }
 
   $useGrouping = false; // set to true to group by (art, zipcode)
 
