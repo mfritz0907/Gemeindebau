@@ -152,6 +152,7 @@ if ($action === 'mapMarkers') {
   $zipcode  = isset($_GET['zipcode']) ? trim($_GET['zipcode']) : '';
   $decades  = isset($_GET['decades']) ? trim($_GET['decades']) : '';
   $withArt  = isset($_GET['with_art']) ? (int)$_GET['with_art'] : 0;
+  $artVisibleOnly = isset($_GET['art_visible']) ? (int)$_GET['art_visible'] : 0;
 
   $useGrouping = false; // set to true to group by (art, zipcode)
 
@@ -161,6 +162,16 @@ if ($action === 'mapMarkers') {
 
   if ($withArt === 1) {
     $where[] = "COALESCE(NULLIF(b.art,''), '') <> ''";
+  }
+
+  $artVisibleCol = null;
+  if ($artVisibleOnly === 1) {
+    $artVisibleCol = resolve_art_visible_column($mysqli);
+    if ($artVisibleCol === null) {
+      out(['error' => 'artVisible column not found'], 500);
+    }
+    $colSql = '`' . str_replace('`', '``', $artVisibleCol) . '`';
+    $where[] = "{$colSql} = 1";
   }
 
   if ($q !== '') {
@@ -215,6 +226,10 @@ if ($action === 'mapMarkers') {
     b.url         AS url,
     b.streetviewlink AS streetviewlink
   ";
+
+  if ($artVisibleCol !== null) {
+    $selectCols .= ", `" . str_replace('`', '``', $artVisibleCol) . "` AS artVisible";
+  }
 
   if ($useGrouping) {
     $sql = "SELECT $selectCols
