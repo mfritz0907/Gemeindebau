@@ -64,6 +64,7 @@ if (file_exists($configPath)) {
                     <button class="primary" type="submit" aria-label="Suche starten">Suchen</button>
                     <button id="reset-btn" type="button" aria-label="Filter zurücksetzen">Zurücksetzen</button>
                     <button id="kunst-btn" type="button" aria-label="Nur mit Kunst anzeigen">Gemeindebauten mit Kunst</button>
+                    <button id="art-visible-btn" type="button" aria-label="Nur mit sichtbarer Kunst anzeigen">Kunst sichtbar auf Streetview</button>
                     <button id="streetview-btn" type="button" aria-label="Nur mit Streetview">Gemeindebauten mit Streetview</button>
                 </form>
                 <div id="map" class="map"></div>

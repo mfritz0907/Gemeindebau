@@ -91,6 +91,7 @@ function wireForm() {
     const form = document.getElementById("search-form");
     const status = document.getElementById("status");
     const kunstBtn = document.getElementById("kunst-btn");
+    const artVisibleBtn = document.getElementById("art-visible-btn");
     const resetBtn = document.getElementById("reset-btn");
 
     // NEW: recordById trigger (expects a small form with input#record-id-input)
@@ -124,6 +125,16 @@ function wireForm() {
             if (status) status.textContent = "Lade Gemeindebauten mit Kunst …";
             // keep existing API param for back-compat
             loadMarkers({ with_art: 1 })
+                .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
+                .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
+        });
+    }
+
+    if (artVisibleBtn) {
+        artVisibleBtn.addEventListener("click", () => {
+            form?.reset();
+            if (status) status.textContent = "Lade Bauten mit sichtbarer Kunst …";
+            loadMarkers({ art_visible: 1 })
                 .then((rows) => (status ? (status.textContent = rows.length ? "Fertig" : "0 Treffer") : null))
                 .catch((err) => handleLoadError(status, "Fehler beim Laden der Daten", err));
         });
