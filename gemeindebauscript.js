@@ -217,9 +217,21 @@ async function fetchJSON(url) {
     }
 }
 
+function normalizeMarkerQuery(query = {}) {
+    const artVisibleVal = query.artVisible ?? query.art_visible;
+    if (artVisibleVal === undefined) {
+        return query;
+    }
+
+    // Send both naming variants so the backend can read either one.
+    const normalized = artVisibleVal === true ? 1 : artVisibleVal === false ? 0 : artVisibleVal;
+    return { ...query, artVisible: normalized, art_visible: normalized };
+}
+
 /** Existing: triggers action=mapMarkers with optional filters */
 async function loadMarkers(query = {}) {
-    const params = new URLSearchParams({ action: "mapMarkers", ...query, nocache: Date.now() });
+    const normalizedQuery = normalizeMarkerQuery(query);
+    const params = new URLSearchParams({ action: "mapMarkers", ...normalizedQuery, nocache: Date.now() });
     const url = `get_data.php?${params.toString()}`;
     const data = await fetchJSON(url);
     if (!Array.isArray(data)) {
