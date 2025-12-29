@@ -275,7 +275,25 @@ if ($action === 'mapMarkers') {
 
 // 4) Distinct ZIP codes that have Street View links
 if ($action === 'streetviewZipcodes') {
-  $sql = "SELECT DISTINCT zipcode FROM building WHERE zipcode IS NOT NULL AND zipcode <> '' ORDER BY zipcode ASC";
+  $artVisibleOnly = 0;
+  if (isset($_GET['artVisible'])) {
+    $artVisibleOnly = parse_bool_flag($_GET['artVisible']);
+  } elseif (isset($_GET['art_visible'])) { // legacy param name
+    $artVisibleOnly = parse_bool_flag($_GET['art_visible']);
+  }
+
+  $where = "WHERE zipcode IS NOT NULL AND zipcode <> '' AND COALESCE(NULLIF(streetviewlink,''), '') <> ''";
+
+  if ($artVisibleOnly === 1) {
+    $col = resolve_art_visible_column($mysqli);
+    if ($col === null) {
+      out(['error' => 'artVisible column not found'], 500);
+    }
+    $colSql = '`' . str_replace('`', '``', $col) . '`';
+    $where .= " AND {$colSql} = 1";
+  }
+
+  $sql = "SELECT DISTINCT zipcode FROM building {$where} ORDER BY zipcode ASC";
   $res = $mysqli->query($sql);
   $zips = [];
   if ($res) { while ($row = $res->fetch_assoc()) { $zips[] = $row['zipcode']; } }
@@ -289,15 +307,28 @@ if ($action === 'streetviewByZip') {
     out(['error' => 'Missing/invalid zipcode'], 400);
   }
 
+  $artVisibleOnly = 0;
+  if (isset($_GET['artVisible'])) {
+    $artVisibleOnly = parse_bool_flag($_GET['artVisible']);
+  } elseif (isset($_GET['art_visible'])) { // legacy param name
+    $artVisibleOnly = parse_bool_flag($_GET['art_visible']);
+  }
+
   $col = resolve_art_visible_column($mysqli);
   if ($col === null) {
     out(['error' => 'artVisible column not found'], 500);
   }
   $colSql = '`' . str_replace('`', '``', $col) . '`';
 
+  $where = "WHERE zipcode = ? AND COALESCE(NULLIF(streetviewlink,''), '') <> ''";
+
+  if ($artVisibleOnly === 1) {
+    $where .= " AND {$colSql} = 1";
+  }
+
   $sql = "SELECT id, Title, art, architecture, zipcode, streetviewlink, {$colSql} AS artVisible
           FROM building
-          WHERE zipcode = ? AND COALESCE(NULLIF(streetviewlink,''), '') <> ''
+          {$where}
           ORDER BY id ASC";
 
   [$stmt, $err] = prepare_and_bind($mysqli, $sql, "s", [$zipcode]);
